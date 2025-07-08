@@ -10,7 +10,7 @@ pub mod lexer_test {
     #[test]
     pub fn test_next_token() {
         let input = "\
-let five = 5;
+let five =5;
 let ten = 10;
 let add = fn(x, y) {
     x + y;
@@ -113,6 +113,7 @@ impl Lexer {
     }
 
     pub fn next_token(&mut self) -> Token {
+        self.skip_whitespace();
         let token = match self.ch {
             '=' => Token::new(TokenType::Assign, self.ch),
             '+' => Token::new(TokenType::Plus, self.ch),
@@ -126,7 +127,9 @@ impl Lexer {
             _ => {
                 if Lexer::is_letter(self.ch) {
                     let literal = self.read_identifier();
-                    Token::new(token::lookup_ident(&literal), literal)
+                    return Token::new(token::lookup_ident(&literal), literal)
+                } else if Lexer::is_digit(self.ch) {
+                    return Token::new(TokenType::Int, self.read_number())
                 } else {
                     Token::new(TokenType::Illegal, self.ch)
                 }
@@ -136,15 +139,35 @@ impl Lexer {
         token
     }
 
-    fn read_identifier(&mut self) -> String {
-        let position = self.position;
-        while Lexer::is_letter(self.ch) {
+    fn skip_whitespace(&mut self) {
+        while self.ch == ' ' || self.ch == '\t' || self.ch == '\n' || self.ch == '\r' {
             self.read_char();
         }
-        self.input[position..self.position].iter().collect()
+    }
+
+    fn read_identifier(&mut self) -> String {
+        let mut ident = String::new();
+        while Lexer::is_letter(self.ch) {
+            ident.push(self.ch);
+            self.read_char();
+        }
+        ident
     }
 
     fn is_letter(ch: char) -> bool {
         'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+    }
+
+    fn read_number(&mut self) -> String {
+        let mut number = String::new();
+        while Lexer::is_digit(self.ch) {
+            number.push(self.ch);
+            self.read_char();
+        }
+        number
+    }
+
+    fn is_digit(ch: char) -> bool {
+        '0' <= ch && ch <= '9'
     }
 }
