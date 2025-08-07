@@ -1,6 +1,3 @@
-use std::collections::HashMap;
-use std::sync::LazyLock;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TokenType {
     Illegal,
@@ -65,13 +62,10 @@ impl Token {
     }
 }
 
-static KEYWORDS: LazyLock<HashMap<&'static str, TokenType>> = LazyLock::new(|| {
-    HashMap::from([
-        ("fn", TokenType::Function),
-        ("let", TokenType::Let)
-    ])
-});
-
 pub fn lookup_ident(ident: impl AsRef<str>) -> TokenType {
-    KEYWORDS.get(ident.as_ref()).copied().unwrap_or(TokenType::Ident)
+    match ident.as_ref() {
+        "fn" => TokenType::Function,
+        "let" => TokenType::Let,
+        _ => TokenType::Ident
+    }
 }
